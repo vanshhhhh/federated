@@ -187,8 +187,8 @@ def _distinct_clip(histogram, sample_num):
   """
 
   def distinct():
-    indices = tf.cast(
-        tf.squeeze(tf.where(tf.not_equal(histogram, 0))), tf.int32)
+    indices = tf.squeeze(
+        tf.cast(tf.where(tf.not_equal(histogram, 0)), tf.int32))
     seed = tf.cast(
         tf.stack([tf.timestamp() * 1e6,
                   tf.timestamp() * 1e6]), dtype=tf.int64)
