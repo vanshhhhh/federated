@@ -35,6 +35,7 @@ py_library(
         "//tensorflow_federated/python/learning/framework:distributors",
         "//tensorflow_federated/python/learning/framework:finalizers",
         "//tensorflow_federated/python/learning/optimizers:optimizer",
+        "@org_tensorflow//tensorflow:tensorflow_py",
     ],
 )
 
@@ -51,6 +52,7 @@ py_cpu_gpu_test(
         "//tensorflow_federated/python/learning:model_examples",
         "//tensorflow_federated/python/learning:model_update_aggregator",
         "//tensorflow_federated/python/learning/optimizers:sgdm",
+        "@org_tensorflow//tensorflow:tensorflow_py",
     ],
 )
 
@@ -77,6 +79,7 @@ py_library(
         "//tensorflow_federated/python/learning/framework:finalizers",
         "//tensorflow_federated/python/learning/optimizers:optimizer",
         "//tensorflow_federated/python/tensorflow_libs:tensor_utils",
+        "@org_tensorflow//tensorflow:tensorflow_py",
     ],
 )
 
@@ -95,5 +98,6 @@ py_cpu_gpu_test(
         "//tensorflow_federated/python/learning:model_utils",
         "//tensorflow_federated/python/learning/framework:dataset_reduce",
         "//tensorflow_federated/python/learning/optimizers:sgdm",
+        "@org_tensorflow//tensorflow:tensorflow_py",
     ],
 )

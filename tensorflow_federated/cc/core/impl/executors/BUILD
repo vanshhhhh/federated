@@ -90,7 +90,10 @@ cc_library(
 
 pybind_extension(
     name = "executor_bindings",
-    srcs = ["executor_bindings.cc"],
+    srcs = [
+        "executor_bindings.cc",
+        "@org_tensorflow//tensorflow:libtensorflow_framework.so.2",
+    ],
     deps = [
         ":cardinalities",
         ":composing_executor",
@@ -406,15 +409,18 @@ cc_library(
 
 pybind_extension(
     name = "serialization_bindings",
-    srcs = ["serialization_bindings.cc"],
+    srcs = [
+        "serialization_bindings.cc",
+        "@org_tensorflow//tensorflow:libtensorflow_framework.so.2",
+        "@org_tensorflow//tensorflow/python:_pywrap_tensorflow_internal.so",
+    ],
     deps = [
         ":status_macros",
         ":tensor_serialization",
         "//tensorflow_federated/proto/v0:executor_cc_proto",
         "@com_google_absl//absl/status:statusor",
         "@org_tensorflow//tensorflow:libtensorflow_framework.so.2.8.0",
-        "@org_tensorflow//tensorflow/python/lib/core:ndarray_tensor",
-        "@org_tensorflow//tensorflow/python/lib/core:safe_ptr",
+        "@org_tensorflow//tensorflow/python:_pywrap_tensorflow_internal.so",
         "@pybind11_abseil//pybind11_abseil:status_casters",
         "@pybind11_protobuf//pybind11_protobuf:wrapped_proto_caster",
     ],
@@ -532,6 +538,7 @@ py_binary(
     testonly = True,
     srcs = ["make_reduce_lambda_test_graph.py"],
     python_version = "PY3",
+    deps = ["@org_tensorflow//tensorflow:tensorflow_py"],
 )
 
 genrule(

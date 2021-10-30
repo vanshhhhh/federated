@@ -97,6 +97,7 @@ py_library(
     deps = [
         ":py_typecheck",
         "@com_google_protobuf//:protobuf_python",
+        "@org_tensorflow//tensorflow:tensorflow_py",
     ],
 )
 
@@ -109,6 +110,7 @@ py_test(
     deps = [
         ":serialization_utils",
         "@com_google_protobuf//:protobuf_python",
+        "@org_tensorflow//tensorflow:tensorflow_py",
     ],
 )
 
@@ -116,7 +118,10 @@ py_library(
     name = "structure",
     srcs = ["structure.py"],
     srcs_version = "PY3",
-    deps = [":py_typecheck"],
+    deps = [
+        ":py_typecheck",
+        "@org_tensorflow//tensorflow:tensorflow_py",
+    ],
 )
 
 py_test(
@@ -125,7 +130,10 @@ py_test(
     srcs = ["structure_test.py"],
     python_version = "PY3",
     srcs_version = "PY3",
-    deps = [":structure"],
+    deps = [
+        ":structure",
+        "@org_tensorflow//tensorflow:tensorflow_py",
+    ],
 )
 
 py_library(
@@ -133,6 +141,7 @@ py_library(
     testonly = True,
     srcs = ["test_utils.py"],
     srcs_version = "PY3",
+    deps = ["@org_tensorflow//tensorflow:tensorflow_py"],
 )
 
 py_library(

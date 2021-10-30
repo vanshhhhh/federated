@@ -47,6 +47,7 @@ py_library(
         ":program_state_manager",
         ":value_reference",
         "//tensorflow_federated/python/common_libs:py_typecheck",
+        "@org_tensorflow//tensorflow:tensorflow_py",
     ],
 )
 
@@ -59,6 +60,7 @@ py_test(
         ":file_program_state_manager",
         ":program_state_manager",
         ":test_utils",
+        "@org_tensorflow//tensorflow:tensorflow_py",
     ],
 )
 
@@ -71,6 +73,7 @@ py_library(
         ":structure_utils",
         ":value_reference",
         "//tensorflow_federated/python/common_libs:py_typecheck",
+        "@org_tensorflow//tensorflow:tensorflow_py",
     ],
 )
 
@@ -80,19 +83,26 @@ py_test(
     deps = [
         ":file_release_manager",
         ":test_utils",
+        "@org_tensorflow//tensorflow:tensorflow_py",
     ],
 )
 
 py_library(
     name = "file_utils",
     srcs = ["file_utils.py"],
-    deps = ["//tensorflow_federated/python/common_libs:py_typecheck"],
+    deps = [
+        "//tensorflow_federated/python/common_libs:py_typecheck",
+        "@org_tensorflow//tensorflow:tensorflow_py",
+    ],
 )
 
 py_test(
     name = "file_utils_test",
     srcs = ["file_utils_test.py"],
-    deps = [":file_utils"],
+    deps = [
+        ":file_utils",
+        "@org_tensorflow//tensorflow:tensorflow_py",
+    ],
 )
 
 py_library(
@@ -113,6 +123,7 @@ py_test(
     deps = [
         ":logging_release_manager",
         ":test_utils",
+        "@org_tensorflow//tensorflow:tensorflow_py",
     ],
 )
 
@@ -131,6 +142,7 @@ py_test(
     deps = [
         ":memory_release_manager",
         ":test_utils",
+        "@org_tensorflow//tensorflow:tensorflow_py",
     ],
 )
 
@@ -162,7 +174,10 @@ py_library(
 py_test(
     name = "structure_utils_test",
     srcs = ["structure_utils_test.py"],
-    deps = [":structure_utils"],
+    deps = [
+        ":structure_utils",
+        "@org_tensorflow//tensorflow:tensorflow_py",
+    ],
 )
 
 py_library(
@@ -174,6 +189,7 @@ py_library(
         ":structure_utils",
         ":value_reference",
         "//tensorflow_federated/python/common_libs:py_typecheck",
+        "@org_tensorflow//tensorflow:tensorflow_py",
     ],
 )
 
@@ -185,6 +201,7 @@ py_test(
     deps = [
         ":tensorboard_release_manager",
         ":test_utils",
+        "@org_tensorflow//tensorflow:tensorflow_py",
     ],
 )
 
@@ -210,5 +227,6 @@ py_test(
     deps = [
         ":test_utils",
         ":value_reference",
+        "@org_tensorflow//tensorflow:tensorflow_py",
     ],
 )

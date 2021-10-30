@@ -41,6 +41,7 @@ py_library(
     name = "checkpoint_manager",
     srcs = ["checkpoint_manager.py"],
     srcs_version = "PY3",
+    deps = ["@org_tensorflow//tensorflow:tensorflow_py"],
 )
 
 py_test(
@@ -48,14 +49,20 @@ py_test(
     srcs = ["checkpoint_manager_test.py"],
     python_version = "PY3",
     srcs_version = "PY3",
-    deps = [":checkpoint_manager"],
+    deps = [
+        ":checkpoint_manager",
+        "@org_tensorflow//tensorflow:tensorflow_py",
+    ],
 )
 
 py_library(
     name = "csv_manager",
     srcs = ["csv_manager.py"],
     srcs_version = "PY3",
-    deps = [":metrics_manager"],
+    deps = [
+        ":metrics_manager",
+        "@org_tensorflow//tensorflow:tensorflow_py",
+    ],
 )
 
 py_test(
@@ -63,7 +70,10 @@ py_test(
     srcs = ["csv_manager_test.py"],
     python_version = "PY3",
     srcs_version = "PY3",
-    deps = [":csv_manager"],
+    deps = [
+        ":csv_manager",
+        "@org_tensorflow//tensorflow:tensorflow_py",
+    ],
 )
 
 py_library(
@@ -96,6 +106,7 @@ py_test(
         "//tensorflow_federated/python/core/impl/types:computation_types",
         "//tensorflow_federated/python/core/impl/types:placements",
         "//tensorflow_federated/python/core/templates:iterative_process",
+        "@org_tensorflow//tensorflow:tensorflow_py",
     ],
 )
 
@@ -117,7 +128,10 @@ py_test(
     srcs = ["sampling_utils_test.py"],
     python_version = "PY3",
     srcs_version = "PY3",
-    deps = [":sampling_utils"],
+    deps = [
+        ":sampling_utils",
+        "@org_tensorflow//tensorflow:tensorflow_py",
+    ],
 )
 
 py_library(
@@ -150,7 +164,10 @@ py_library(
     name = "tensorboard_manager",
     srcs = ["tensorboard_manager.py"],
     srcs_version = "PY3",
-    deps = [":metrics_manager"],
+    deps = [
+        ":metrics_manager",
+        "@org_tensorflow//tensorflow:tensorflow_py",
+    ],
 )
 
 py_test(
@@ -158,7 +175,10 @@ py_test(
     srcs = ["tensorboard_manager_test.py"],
     python_version = "PY3",
     srcs_version = "PY3",
-    deps = [":tensorboard_manager"],
+    deps = [
+        ":tensorboard_manager",
+        "@org_tensorflow//tensorflow:tensorflow_py",
+    ],
 )
 
 py_library(

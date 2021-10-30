@@ -42,6 +42,7 @@ py_library(
     deps = [
         ":download",
         ":sql_client_data",
+        "@org_tensorflow//tensorflow:tensorflow_py",
     ],
 )
 
@@ -51,7 +52,10 @@ py_test(
     srcs = ["celeba_test.py"],
     python_version = "PY3",
     srcs_version = "PY3",
-    deps = [":celeba"],
+    deps = [
+        ":celeba",
+        "@org_tensorflow//tensorflow:tensorflow_py",
+    ],
 )
 
 py_library(
@@ -62,6 +66,7 @@ py_library(
         ":download",
         ":from_tensor_slices_client_data",
         ":sql_client_data",
+        "@org_tensorflow//tensorflow:tensorflow_py",
     ],
 )
 
@@ -71,13 +76,17 @@ py_test(
     srcs = ["cifar100_test.py"],
     python_version = "PY3",
     srcs_version = "PY3",
-    deps = [":cifar100"],
+    deps = [
+        ":cifar100",
+        "@org_tensorflow//tensorflow:tensorflow_py",
+    ],
 )
 
 py_library(
     name = "dataset_utils",
     srcs = ["dataset_utils.py"],
     srcs_version = "PY3",
+    deps = ["@org_tensorflow//tensorflow:tensorflow_py"],
 )
 
 py_test(
@@ -89,6 +98,7 @@ py_test(
     deps = [
         ":dataset_utils",
         ":from_tensor_slices_client_data",
+        "@org_tensorflow//tensorflow:tensorflow_py",
     ],
 )
 
@@ -96,6 +106,7 @@ py_library(
     name = "download",
     srcs = ["download.py"],
     srcs_version = "PY3",
+    deps = ["@org_tensorflow//tensorflow:tensorflow_py"],
 )
 
 py_test(
@@ -115,6 +126,7 @@ py_library(
         ":download",
         ":from_tensor_slices_client_data",
         ":sql_client_data",
+        "@org_tensorflow//tensorflow:tensorflow_py",
     ],
 )
 
@@ -124,7 +136,10 @@ py_test(
     srcs = ["emnist_test.py"],
     python_version = "PY3",
     srcs_version = "PY3",
-    deps = [":emnist"],
+    deps = [
+        ":emnist",
+        "@org_tensorflow//tensorflow:tensorflow_py",
+    ],
 )
 
 py_library(
@@ -136,6 +151,7 @@ py_library(
         ":download",
         ":from_tensor_slices_client_data",
         ":sql_client_data",
+        "@org_tensorflow//tensorflow:tensorflow_py",
     ],
 )
 
@@ -145,7 +161,10 @@ py_test(
     srcs = ["shakespeare_test.py"],
     python_version = "PY3",
     srcs_version = "PY3",
-    deps = [":shakespeare"],
+    deps = [
+        ":shakespeare",
+        "@org_tensorflow//tensorflow:tensorflow_py",
+    ],
 )
 
 py_library(
@@ -156,6 +175,7 @@ py_library(
         ":download",
         ":from_tensor_slices_client_data",
         ":sql_client_data",
+        "@org_tensorflow//tensorflow:tensorflow_py",
     ],
 )
 
@@ -165,7 +185,10 @@ py_test(
     srcs = ["stackoverflow_test.py"],
     python_version = "PY3",
     srcs_version = "PY3",
-    deps = [":stackoverflow"],
+    deps = [
+        ":stackoverflow",
+        "@org_tensorflow//tensorflow:tensorflow_py",
+    ],
 )
 
 py_library(
@@ -175,6 +198,7 @@ py_library(
     deps = [
         ":client_data",
         ":vision_datasets_utils",
+        "@org_tensorflow//tensorflow:tensorflow_py",
     ],
 )
 
@@ -187,6 +211,7 @@ py_test(
     deps = [
         ":gldv2",
         ":vision_datasets_utils",
+        "@org_tensorflow//tensorflow:tensorflow_py",
     ],
 )
 
@@ -197,6 +222,7 @@ py_library(
     deps = [
         ":client_data",
         ":vision_datasets_utils",
+        "@org_tensorflow//tensorflow:tensorflow_py",
     ],
 )
 
@@ -209,6 +235,7 @@ py_test(
     deps = [
         ":inaturalist",
         ":vision_datasets_utils",
+        "@org_tensorflow//tensorflow:tensorflow_py",
     ],
 )
 
@@ -219,6 +246,7 @@ py_library(
     deps = [
         ":client_data",
         ":file_per_user_client_data",
+        "@org_tensorflow//tensorflow:tensorflow_py",
     ],
 )
 
@@ -227,7 +255,10 @@ py_test(
     srcs = ["vision_datasets_utils_test.py"],
     python_version = "PY3",
     srcs_version = "PY3",
-    deps = [":vision_datasets_utils"],
+    deps = [
+        ":vision_datasets_utils",
+        "@org_tensorflow//tensorflow:tensorflow_py",
+    ],
 )
 
 py_library(
@@ -238,6 +269,7 @@ py_library(
         "//tensorflow_federated/python/common_libs:py_typecheck",
         "//tensorflow_federated/python/core/api:computation_base",
         "//tensorflow_federated/python/core/api:computations",
+        "@org_tensorflow//tensorflow:tensorflow_py",
     ],
 )
 
@@ -251,6 +283,7 @@ py_test(
         ":client_data",
         "//tensorflow_federated/python/core/api:computations",
         "//tensorflow_federated/python/core/backends/native:execution_contexts",
+        "@org_tensorflow//tensorflow:tensorflow_py",
     ],
 )
 
@@ -262,6 +295,7 @@ py_library(
         ":client_data",
         "//tensorflow_federated/python/common_libs:py_typecheck",
         "//tensorflow_federated/python/tensorflow_libs:tensor_utils",
+        "@org_tensorflow//tensorflow:tensorflow_py",
     ],
 )
 
@@ -275,6 +309,7 @@ py_test(
         ":file_per_user_client_data",
         "//tensorflow_federated/python/core/api:computation_base",
         "//tensorflow_federated/python/core/backends/native:execution_contexts",
+        "@org_tensorflow//tensorflow:tensorflow_py",
     ],
 )
 
@@ -285,6 +320,7 @@ py_library(
     deps = [
         ":client_data",
         "//tensorflow_federated/python/common_libs:py_typecheck",
+        "@org_tensorflow//tensorflow:tensorflow_py",
     ],
 )
 
@@ -299,6 +335,7 @@ py_test(
         "//tensorflow_federated/python/core/api:computation_base",
         "//tensorflow_federated/python/core/backends/native:execution_contexts",
         "//tensorflow_federated/python/core/impl/types:computation_types",
+        "@org_tensorflow//tensorflow:tensorflow_py",
     ],
 )
 
@@ -309,6 +346,7 @@ py_library(
     deps = [
         ":client_data",
         "//tensorflow_federated/python/common_libs:py_typecheck",
+        "@org_tensorflow//tensorflow:tensorflow_py",
     ],
 )
 
@@ -321,6 +359,7 @@ py_test(
     deps = [
         ":sql_client_data",
         "//tensorflow_federated/python/core/backends/native:execution_contexts",
+        "@org_tensorflow//tensorflow:tensorflow_py",
     ],
 )
 
@@ -331,6 +370,7 @@ py_library(
     deps = [
         ":client_data",
         "//tensorflow_federated/python/common_libs:py_typecheck",
+        "@org_tensorflow//tensorflow:tensorflow_py",
     ],
 )
 
@@ -343,5 +383,6 @@ py_test(
         ":from_tensor_slices_client_data",
         ":transforming_client_data",
         "//tensorflow_federated/python/core/backends/native:execution_contexts",
+        "@org_tensorflow//tensorflow:tensorflow_py",
     ],
 )

@@ -22,6 +22,7 @@ py_library(
 py_library(
     name = "executor_stack_bindings",
     srcs = ["executor_stack_bindings.py"],
+    data = ["//tensorflow_federated/cc/core/impl/executor_stacks:executor_stack_bindings.so"],
     srcs_version = "PY3",
     tags = ["nokokoro"],
     deps = [
