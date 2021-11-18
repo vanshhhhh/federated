@@ -20,6 +20,7 @@ import tensorflow as tf
 from tensorflow_federated.python.core.backends.native import execution_contexts
 from tensorflow_federated.python.learning import model as model_lib
 from tensorflow_federated.python.learning.models import functional
+from tensorflow_federated.python.tensorflow_libs import variable_utils
 
 
 def initial_weights():
@@ -54,6 +55,14 @@ def forward_pass(model_weights, batch_input, training):
   average_loss = total_loss / tf.cast(num_examples, tf.float32)
   return model_lib.BatchOutput(
       loss=average_loss, predictions=predictions, num_examples=num_examples)
+
+
+def create_test_keras_model():
+  return tf.keras.models.Sequential([
+      tf.keras.layers.InputLayer(input_shape=(1,)),
+      tf.keras.layers.Dense(
+          1, kernel_initializer='zeros', bias_initializer='zeros')
+  ])
 
 
 def create_test_dataset():
@@ -123,6 +132,62 @@ class FunctionalTest(tf.test.TestCase):
     self.assertAllClose(
         functional_model.predict_on_batch(functional_model.initial_weights,
                                           example_batch[0]), [[0.]] * 5)
+
+  def test_construct_from_keras(self):
+    functional_model = functional.functional_model_from_keras(
+        keras_model=create_test_keras_model(),
+        loss_fn=tf.keras.losses.SparseCategoricalCrossentropy(),
+        input_spec=(tf.TensorSpec([None, 1], dtype=tf.float32),
+                    tf.TensorSpec([None, 1], dtype=tf.int32)))
+    self.assertIsInstance(functional_model, functional.FunctionalModel)
+
+  def test_construct_from_keras_converges(self):
+    functional_model = functional.functional_model_from_keras(
+        keras_model=create_test_keras_model(),
+        loss_fn=tf.keras.losses.MeanSquaredError(),
+        input_spec=(tf.TensorSpec([None, 1], dtype=tf.float32),
+                    tf.TensorSpec([None, 1], dtype=tf.int32)))
+    with tf.Graph().as_default() as test_graph:
+      # Capture all the variables for later initialization in the session,
+      # otherwise its hard to get our hands on the Keras owned variables.
+      with variable_utils.record_variable_creation_scope(
+      ) as captured_variables:
+        # Create data satisfying y = 2*x + 1
+        dataset = tf.data.Dataset.from_tensor_slices((
+            # Features
+            [[1.0], [2.0], [3.0]],
+            # Labels.
+            [[3.0], [5.0], [7.0]],
+        )).batch(1)
+        variables = tf.nest.map_structure(tf.Variable,
+                                          functional_model.initial_weights)
+        optimizer = tf.keras.optimizers.SGD(learning_rate=0.01)
+
+        @tf.function
+        def train():
+          weights = tf.nest.map_structure(lambda v: v.read_value(), variables)
+          initial_loss = loss = functional_model.forward_pass(
+              weights, next(iter(dataset)), training=True).loss
+          trainable = variables[0]
+          for batch in dataset.repeat(30):
+            with tf.GradientTape() as tape:
+              weights = tf.nest.map_structure(lambda v: v.read_value(),
+                                              variables)
+              tape.watch(weights[0])
+              batch_output = functional_model.forward_pass(
+                  weights, batch, training=True)
+            gradients = tape.gradient(batch_output.loss, weights[0])
+            optimizer.apply_gradients(zip(gradients, trainable))
+            loss = batch_output.loss
+          return initial_loss, loss
+
+        initial_loss, final_loss = train()
+    with tf.compat.v1.Session(graph=test_graph) as sess:
+      sess.run(tf.compat.v1.initializers.variables(captured_variables))
+      initial_loss, final_loss = sess.run([initial_loss, final_loss])
+    # Expect some amount of convergence after a few epochs of the dataset.
+    self.assertGreater(initial_loss, 2.0)
+    self.assertLess(final_loss, 1.0)
 
   def test_tff_model_from_functional_same_result(self):
     dataset = create_test_dataset()
@@ -275,6 +340,19 @@ class FunctionalTest(tf.test.TestCase):
         # mse = (1.0+2.0)/(2.0+2.0) = 0.75
         # mae = (1.0+1.0)/(2.0+6.0) = 0.25
         collections.OrderedDict(loss=0.5, mse=0.75, mae=0.25))
+
+  def test_keras_model_with_batch_normalization_fails(self):
+    model = tf.keras.models.Sequential([
+        tf.keras.layers.InputLayer(input_shape=[10]),
+        tf.keras.layers.BatchNormalization(),
+    ])
+    with self.assertRaisesRegex(functional.KerasFunctionalModelError,
+                                'batch normalization'):
+      functional.functional_model_from_keras(
+          model,
+          tf.keras.losses.MeanSquaredError(),
+          input_spec=(tf.TensorSpec(shape=[None, 10]),
+                      tf.TensorSpec(shape=[None, 1])))
 
 
 if __name__ == '__main__':

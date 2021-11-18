@@ -35,6 +35,7 @@ from tensorflow_federated.python.core.impl.federated_context import intrinsics
 from tensorflow_federated.python.core.impl.types import computation_types
 from tensorflow_federated.python.learning import model as model_lib
 from tensorflow_federated.python.learning.metrics import finalizer
+from tensorflow_federated.python.tensorflow_libs import variable_utils
 
 Weight = Union[np.ndarray, int, float]
 WeightStruct = Union[Sequence[Weight], Mapping[str, Weight]]
@@ -297,3 +298,133 @@ def model_from_functional(
 ) -> model_lib.Model:
   """Converts a `FunctionalModel` to a `tff.learning.Model`."""
   return _ModelFromFunctional(functional_model, metric_constructors)
+
+
+class KerasFunctionalModelError(Exception):
+  """An error raised when a FunctionalModel backed by Keras is used outside TFF."""
+
+
+def functional_model_from_keras(
+    keras_model: tf.keras.Model,
+    loss_fn,
+    input_spec: Union[Sequence[Any], Mapping[str, Any]],
+) -> FunctionalModel:
+  """Converts a `tf.keras.Model` to a `tff.learning.models.FunctionalModel`.
+
+  NOTE: This method only supports models where calling that model with
+  `training=True` and `training=False` produce the same graph. Keras layers
+  such as batch normalization will fail because they require updating internal
+  state when `training=True` which is not suported.
+
+  IMPORTANT: The returned model should only be used in the context of a
+  `tff.tf_computation` decorated callable. It will raise an error otherwise.
+
+  Args:
+    keras_model: A `tf.keras.Model` object, should be uncompiled. If compiled,
+      the metrics, optimizer, and loss function will be ignored.
+    loss_fn: A `tf.keras.losses.Loss` object.
+    input_spec: A structure of `tf.TensorSpec` defining the input to the model.
+
+  Returns:
+    A `tff.learning.models.FunctionalModel`.
+
+  Raises:
+    KerasFunctionalModelError: the model has a batch normalization layer.
+  """
+  # We're going to do something fancy here:
+  #
+  # 1. Get a copy of all the variables, in the order they are created during
+  #    model construction, when in a graph context.
+  # 2. Use this ordering to construct a type signature of the model weights in
+  #    such a way that we can inject TENSORS (those that are coming in as
+  #    arguments) in place of variable creation during model cloning.
+  # 3. Profit by having variableless graphs!
+  #
+  # **WARNING** 2 caveats:
+  #
+  # 1. This model _must_ be used inside a graph context (e.g. a
+  #    `tff.tf_computation` decorated callable, aka a `tff.Computation`). Keras
+  #    appears to create extra variables in the eager context that are not part
+  #    of the user specified model, and end up not being compatible.
+  #
+  # 2. We have found that this trick does NOT work with non-trainable variables
+  #    that are updated during training. Namely layers such as
+  #    BatchNormalization try to update means/variances during training and are
+  #    not compatible with this approach. We generally recommend
+  #    GroupNormalization in place of BatchNormalization at the current time.
+  for layer in keras_model.layers:
+    # There may be other layers that are problematic, at this time updating the
+    # mean/variance in batchnorm layer is the only known such instance.
+    if isinstance(layer, tf.keras.layers.BatchNormalization):
+      raise KerasFunctionalModelError(
+          'Keras model contains a batch normalization layer, which is '
+          'incompatible with `tff.learning.models.FunctionalModel`. Consider '
+          'using group normalization instead.')
+
+  with tf.Graph().as_default() as g:
+    with variable_utils.record_variable_creation_scope() as captured_variables:
+      tf.keras.models.clone_model(keras_model)
+
+  trainable_variables = tuple(v for v in captured_variables if v.trainable)
+  non_trainable_variables = tuple(
+      v for v in captured_variables if not v.trainable)
+
+  with tf.compat.v1.Session(graph=g) as sess:
+    sess.run(tf.compat.v1.initializers.variables(captured_variables))
+    initial_weights = sess.run(
+        fetches=(trainable_variables, non_trainable_variables))
+
+  @tf.function
+  def predict_on_batch(model_weights: ModelWeights,
+                       x: Any,
+                       training: bool = True) -> Any:
+    with tf.init_scope():
+      if tf.executing_eagerly():
+        raise KerasFunctionalModelError(
+            'tf.keras.Model used as a FunctionalModel is only usable inside a '
+            'tff.tf_computation decorated callable or a graph context.')
+    # Make a copy of the weights container; can't mutate Python containers
+    # inside a tf.function.
+    trainable, non_trainable = (list(w) for w in model_weights)
+
+    def swap_tensor_parameter_for_variable(_, **kwargs):
+      if kwargs.get('trainable', True):
+        return trainable.pop(0)
+      else:
+        return non_trainable.pop(0)
+
+    with tf.variable_creator_scope(swap_tensor_parameter_for_variable):
+      variableless_model = tf.keras.models.clone_model(keras_model)
+    return variableless_model(x, training)
+
+  @tf.function
+  def forward_pass(model_weights: ModelWeights,
+                   batch_input: Any,
+                   training: bool = True) -> model_lib.BatchOutput:
+    if isinstance(batch_input, collections.abc.Mapping):
+      x = batch_input['x']
+      y = batch_input['y']
+    elif isinstance(batch_input, collections.abc.Sequence):
+      x, y = batch_input
+    else:
+      raise ValueError(
+          '`batch_input` must be either a mapping with keys `x` '
+          f'and `y` or a sequence of `(x, y)`. Got: {batch_input!r}')
+    predictions = predict_on_batch(model_weights, x, training)
+    batch_loss = loss_fn(y_true=y, y_pred=predictions)
+
+    # More work needed to support models with multiple loss functions.
+
+    def nrows(t):
+      return t.nrows() if isinstance(t, tf.RaggedTensor) else tf.shape(t)[0]
+
+    return model_lib.BatchOutput(
+        loss=batch_loss,
+        predictions=predictions,
+        num_examples=nrows(tf.nest.flatten(batch_input)[0]))
+
+  return FunctionalModel(
+      initial_weights=initial_weights,
+      forward_pass_fn=forward_pass,
+      predict_on_batch_fn=predict_on_batch,
+      input_spec=input_spec)
